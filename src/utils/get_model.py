@@ -4,6 +4,7 @@ from fvcore.nn import FlopCountAnalysis, flop_count_table
 
 
 def get_model(model_name, model_kwargs, dataset, test_N=10000, test_k=100):
+    print (model_kwargs)
     model_type = model_name.split("_")[0]
     if model_type == "trans":
         model = Transformer(

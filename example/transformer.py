@@ -59,6 +59,7 @@ def prepare_input(x, coords, batch, helper_params):
         pad_seq, unpad_seq = pad_and_unpad(batch, block_size, combined_shifts[0, 0], graph_sizes)
         x = x[pad_seq]
         kwargs["combined_shifts"] = combined_shifts[..., pad_seq]
+        print (coords[pad_seq].size())
         kwargs["coords"] = coords[pad_seq]
     return x, kwargs, unpad_seq
 
@@ -122,7 +123,7 @@ class Transformer(nn.Module):
 
         encoded_x = self.W(torch.cat(all_encoded_x, dim=-1))
         out = encoded_x + self.dropout(self.mlp_out(encoded_x))
-
+        print (self.num_classes)
         if self.num_classes:
             out = self.out_proj(out)
         return out[unpad_seq]

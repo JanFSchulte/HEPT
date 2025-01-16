@@ -3,7 +3,7 @@ note: k60_rad256_hept
 seed: 42
 log_tensorboard: false
 num_threads: 5
-resume: 03_28-15_21_40.9537_trans_hept_42_k60_rad256_hept
+resume: false
 only_eval: true
 
 

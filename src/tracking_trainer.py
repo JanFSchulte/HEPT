@@ -165,8 +165,8 @@ def run_one_seed(config):
         writer.add_custom_scalars(layout)
 
     for epoch in range(config["num_epochs"]):
-        if not config.get("only_eval", False):
-            train_res = run_one_epoch(model, opt, criterion, loaders["train"], "train", epoch, device, metrics, lr_s)
+        #if not config.get("only_eval", False):
+        train_res = run_one_epoch(model, opt, criterion, loaders["train"], "train", epoch, device, metrics, lr_s)
         valid_res = run_one_epoch(model, opt, criterion, loaders["valid"], "valid", epoch, device, metrics, lr_s)
         test_res = run_one_epoch(model, opt, criterion, loaders["test"], "test", epoch, device, metrics, lr_s)
 

@@ -20,8 +20,10 @@ def qkv_res(s_query, s_key, s_value):
 
 def prep_qk(query, key, w, coords):
     qw = w.sum(dim=1).clamp(max=50).exp().sum(dim=-1)
+    print ("qw size: ", qw.size())
     new_qw_expand_dim = torch.cat([qw[:, :1], qw], dim=-1)
-
+    print ("new_qw_expand_dim size: ", new_qw_expand_dim.size())
+    print (torch.sqrt(2 * new_qw_expand_dim)[None].size(), coords[:, None].size())
     sqrt_w_r = torch.sqrt(2 * new_qw_expand_dim)[None] * coords[:, None]
     q_hat = torch.cat([query, sqrt_w_r], dim=-1)
     k_hat = torch.cat([key, sqrt_w_r], dim=-1)
@@ -44,7 +46,7 @@ class HEPTAttention(nn.Module):
         query = query.view(-1, self.num_heads, self.dim_per_head)
         key = key.view(-1, self.num_heads, self.dim_per_head)
         value = value.view(-1, self.num_heads, self.dim_per_head)
-
+        print (kwargs["w_rpe"].weight.size())
         w = rearrange(
             kwargs["w_rpe"].weight,
             "(h d) (r k) -> h d r k",
@@ -52,6 +54,7 @@ class HEPTAttention(nn.Module):
             d=self.dim_per_head,
             k=self.num_w_per_dist,
         )
+        print (w.size())
         q_hat, k_hat = prep_qk(query, key, w, kwargs["coords"])
 
         q_hat = rearrange(q_hat, "n h d -> h n d")

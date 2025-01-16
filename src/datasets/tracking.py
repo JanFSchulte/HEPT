@@ -52,7 +52,7 @@ def get_new_idx_split(dataset):
 
 
 class Tracking(InMemoryDataset):
-    def __init__(self, root, dataset_name, debug=False, **kwargs):
+    def __init__(self, root, dataset_name, debug=True, **kwargs):
         assert dataset_name in ["tracking-6k", "tracking-60k"]
         self.url_processed_60k = "https://zenodo.org/records/10694703/files/tracking-60k-processed.zip"
         self.url_processed_6k = "https://zenodo.org/records/10694703/files/tracking-6k-processed.zip"
