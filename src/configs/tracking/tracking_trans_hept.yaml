@@ -3,7 +3,7 @@ note: k60_rad256_hept
 seed: 42
 log_tensorboard: false
 num_threads: 5
-resume: 03_28-15_21_40.9537_trans_hept_42_k60_rad256_hept
+resume: false
 only_eval: true
 
 
@@ -11,7 +11,7 @@ model_name: trans_hept
 model_kwargs:
   block_size: 100
   n_hashes: 3
-  num_regions: 150  # 150 if tracking-60k
+  num_regions: 3  # 150 if tracking-60k
   pe_type: none
   num_heads: 8
   h_dim: 24
@@ -40,6 +40,6 @@ lr_scheduler_kwargs:
 
 data_dir: ../data/
 # dataset_name: tracking-6k
-dataset_name: tracking-60k
+dataset_name: tracking-600
 main_metric: accuracy@0.9
 mode: max
