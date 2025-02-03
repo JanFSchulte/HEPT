@@ -8,7 +8,7 @@ from preprocessing.point_cloud_builder import PointCloudBuilder
 from pathlib import Path
 
 # %%
-n_sectors = 1
+n_sectors = 100
 
 # %%
 data_path = Path("./")
@@ -21,7 +21,7 @@ detector_config_path = data_path / "preprocessing" / "detector_kaggle.csv"
 # build point clouds for each sector in the pixel layers only
 pc_builder = PointCloudBuilder(
     indir=input_dir,
-    outdir=data_path / "tracking-60k",
+    outdir=data_path / "tracking-600",
     n_sectors=n_sectors,
     pixel_only=True,
     redo=True,

@@ -47,7 +47,7 @@ def process_data(data, phase, device, epoch, p=0.2):
     if phase == "train":
         # pairs_to_add = add_random_edge(data.point_pairs_index, p=p, batch=data.batch, force_undirected=True)
         num_aug_pairs = int(data.point_pairs_index.size(1) * p / 2)
-        pairs_to_add = to_undirected(torch.randint(0, data.num_nodes, (2, num_aug_pairs), device=device))
+        pairs_to_add = to_undirected(torch.randint(0, data.num_nodes_orig, (2, num_aug_pairs), device=device))
         data.point_pairs_index = torch.cat([data.point_pairs_index, pairs_to_add], dim=1)
     return data
 
@@ -127,7 +127,9 @@ def run_one_seed(config):
 
     set_seed(config["seed"])
     dataset = get_dataset(dataset_name, dataset_dir)
-    loaders = get_data_loader(dataset, dataset.idx_split, batch_size=config["batch_size"])
+    pad = False
+    if "simplehept" in model_name: pad = True
+    loaders = get_data_loader(dataset, dataset.idx_split, batch_size=config["batch_size"], pad=pad)
 
     model = get_model(model_name, config["model_kwargs"], dataset)
     if config.get("only_flops", False):

@@ -1,5 +1,6 @@
 from .performer import PerformerAttention
 from .hept import HEPTAttention
+from .simplehept import FullAttention
 from .reformer import ReformerAttention
 from .smyrf import SmyrfAttention
 from .sb import SBAttention

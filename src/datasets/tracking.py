@@ -52,7 +52,7 @@ def get_new_idx_split(dataset):
 
 
 class Tracking(InMemoryDataset):
-    def __init__(self, root, dataset_name, debug=False, **kwargs):
+    def __init__(self, root, dataset_name, pad=False, debug=False, **kwargs):
         assert dataset_name in ["tracking-6k", "tracking-60k",'tracking-600', 'tracking-1200']
         self.url_processed_60k = "https://zenodo.org/records/10694703/files/tracking-60k-processed.zip"
         self.url_processed_6k = "https://zenodo.org/records/10694703/files/tracking-6k-processed.zip"
@@ -95,6 +95,9 @@ class Tracking(InMemoryDataset):
         self.x_dim = self._data.x.shape[1] + 1
         self.coords_dim = 2 + 4
 
+
+
+
     @property
     def raw_dir(self):
         return os.path.join(self.root, "raw", self.dataset_name)
@@ -123,8 +126,8 @@ class Tracking(InMemoryDataset):
             os.unlink(path)
         else:
             print("Stop downloading.")
-            shutil.rmtree(self.root)
-            exit(-1)
+            #shutil.rmtree(self.root)
+            #exit(-1)
 
     def process(self):
         all_point_clouds = os.listdir(self.raw_dir)
@@ -254,4 +257,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dataset = Tracking(root, args.dataset_name, debug=False)
-    print(dataset)

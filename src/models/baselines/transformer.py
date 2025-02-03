@@ -10,6 +10,7 @@ from ..attention import (
     FLTAttention,
     PCTAttention,
     FlatformerAttention,
+    FullAttention
 )
 from ..model_utils.mask_utils import FullMask
 from ..model_utils.hash_utils import pad_to_multiple, get_regions, quantile_partition
@@ -21,11 +22,13 @@ from einops import rearrange
 
 def prepare_input(x, coords, edge_index, batch, attn_type, helper_funcs):
     kwargs = {}
-    if attn_type not in ["pct", "flatformer", "hept"]:
+    if attn_type not in ["pct", "flatformer", "hept",'simplehept']:
         edge_index = None
         x, mask = to_dense_batch(x, batch)
         coords = to_dense_batch(coords, batch)[0]
         key_padding_mask = FullMask(mask)
+#    elif attn_type in ['simplehept']:
+#        mask = batch.padding_mask
     else:
         assert batch.max() == 0
         key_padding_mask = None
@@ -40,7 +43,7 @@ def prepare_input(x, coords, edge_index, batch, attn_type, helper_funcs):
         mappings = helper_funcs["mapping"](discretized_coords, batch_size=1)
         kwargs["mappings"] = mappings
 
-    if attn_type in ["hept"]:
+    if attn_type in ["hept","simplehept"]:
         with torch.no_grad():
             block_size = helper_funcs["block_size"]
             kwargs["raw_size"] = x.shape[0]
@@ -52,7 +55,7 @@ def prepare_input(x, coords, edge_index, batch, attn_type, helper_funcs):
             regions_h = rearrange(regions, "c a h -> a (c h)")
             region_indices_eta = quantile_partition(sorted_eta_idx, regions_h[0][:, None])
             region_indices_phi = quantile_partition(sorted_phi_idx, regions_h[1][:, None])
-            kwargs["region_indices"] = [region_indices_eta, region_indices_phi]
+            kwargs["region_indices/home/jschulte/.conda/envs/cuda121/lib/python3.10/site-packages/torch/nn/modules/module.py"] = [region_indices_eta, region_indices_phi]
             kwargs["regions_h"] = regions_h
             kwargs["coords"][kwargs["raw_size"] :] = 0.0
 
@@ -104,7 +107,7 @@ class Transformer(nn.Module):
             self.helper_funcs["B"] = kwargs["B"]
             self.helper_funcs["mapping"] = FlattenedWindowMapping(**kwargs)
             self.W = nn.Linear(self.h_dim * (self.n_layers * 4 + 1), int(self.h_dim // 2), bias=False)
-        elif self.attn_type == "hept":
+        elif self.attn_type == "hept" or self.attn_type == "simplehept":
             self.helper_funcs["block_size"] = kwargs["block_size"]
             self.regions = nn.Parameter(get_regions(kwargs["num_regions"], kwargs["n_hashes"], kwargs["num_heads"]), requires_grad=False)
             self.helper_funcs["regions"] = self.regions
@@ -121,6 +124,7 @@ class Transformer(nn.Module):
         else:
             x, edge_index, coords, batch = data.x, data.edge_index, data.coords, data.batch
 
+
         # discrete feature to embedding
         if self.task == "pileup":
             pids_emb = self.pids_enc(x[..., -1].long())
@@ -128,17 +132,19 @@ class Transformer(nn.Module):
 
         x, mask, kwargs = prepare_input(x, coords, edge_index, batch, self.attn_type, self.helper_funcs)
 
+        if self.attn_type in ['simplehept']: mask = data.padding_mask
+
         encoded_x = self.feat_encoder(x)
         all_encoded_x = [encoded_x]
         for i in range(self.n_layers):
             if self.attn_type in ["flatformer"]:
-                encoded_x, all_shift_x = self.attns[i](encoded_x, kwargs)
+                encoded_x, all_shift_x = self.attns[i](encoded_x, mask, kwargs)
                 all_encoded_x = all_encoded_x + all_shift_x
             else:
                 if self.use_ckpt:
-                    encoded_x = checkpoint(self.attns[i], encoded_x, kwargs)
+                    encoded_x = checkpoint(self.attns[i], encoded_x, mask, kwargs)
                 else:
-                    encoded_x = self.attns[i](encoded_x, kwargs)
+                    encoded_x = self.attns[i](encoded_x, mask, kwargs)
                 all_encoded_x.append(encoded_x)
 
         encoded_x = self.W(torch.cat(all_encoded_x, dim=-1))
@@ -172,6 +178,9 @@ class Attn(nn.Module):
         if attn_type == "hept":
             # +2 for data.pos
             self.attn = HEPTAttention(self.dim_per_head + coords_dim, **kwargs)
+        elif attn_type == "simplehept":
+            # +2 for data.pos
+            self.attn = FullAttention(self.dim_per_head + coords_dim, **kwargs)
         elif attn_type == "performer":
             self.attn = PerformerAttention(coords_dim=coords_dim, **kwargs)
         elif attn_type == "reformer":
@@ -205,13 +214,13 @@ class Attn(nn.Module):
         self.w_rpe = nn.Linear(kwargs["num_w_per_dist"] * (coords_dim - 1), self.num_heads * self.dim_per_head)
         self.pe_func = get_pe_func(kwargs["pe_type"], coords_dim, kwargs)
 
-    def forward(self, x, kwargs):
+    def forward(self, x, mask, kwargs):
         pe = kwargs["coords"] if self.pe_func is None else self.pe_func(kwargs["coords"])
         if self.attn_type not in ["pct", "flatformer"]:
             x_pe = x + pe if self.pe_func is not None else x
             x_normed = self.norm1(x_pe)
             q, k, v = self.w_q(x_normed), self.w_k(x_normed), self.w_v(x_normed)
-            aggr_out = self.attn(q, k, v, pe=pe, w_rpe=self.w_rpe, **kwargs)
+            aggr_out = self.attn(q, k, v, mask, pe=pe, w_rpe=self.w_rpe, **kwargs)
 
             x = x + self.dropout(aggr_out)
             ff_output = self.ff(self.norm2(x))
