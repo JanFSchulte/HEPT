@@ -128,7 +128,7 @@ def run_one_seed(config):
     set_seed(config["seed"])
     dataset = get_dataset(dataset_name, dataset_dir)
     pad = False
-    if "simplehept" in model_name: pad = True
+    if "hept" in model_name: pad = True
     loaders = get_data_loader(dataset, dataset.idx_split, batch_size=config["batch_size"], pad=pad)
 
     model = get_model(model_name, config["model_kwargs"], dataset)

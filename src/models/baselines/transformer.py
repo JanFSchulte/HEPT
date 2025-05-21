@@ -55,7 +55,7 @@ def prepare_input(x, coords, edge_index, batch, attn_type, helper_funcs):
             regions_h = rearrange(regions, "c a h -> a (c h)")
             region_indices_eta = quantile_partition(sorted_eta_idx, regions_h[0][:, None])
             region_indices_phi = quantile_partition(sorted_phi_idx, regions_h[1][:, None])
-            kwargs["region_indices/home/jschulte/.conda/envs/cuda121/lib/python3.10/site-packages/torch/nn/modules/module.py"] = [region_indices_eta, region_indices_phi]
+            kwargs["region_indices"] = [region_indices_eta, region_indices_phi]
             kwargs["regions_h"] = regions_h
             kwargs["coords"][kwargs["raw_size"] :] = 0.0
 

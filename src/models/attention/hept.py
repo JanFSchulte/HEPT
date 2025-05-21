@@ -68,7 +68,7 @@ class HEPTAttention(nn.Module):
         self.num_w_per_dist = kwargs["num_w_per_dist"]
         self.e2lsh = E2LSH(n_hashes=self.n_hashes, n_heads=self.num_heads, dim=hash_dim)
 
-    def forward(self, query, key, value, **kwargs):
+    def forward(self, query, key, value, padding_mask,  **kwargs):
         # TODO: support batched inputs
         query = query.view(-1, self.num_heads, self.dim_per_head)
         key = key.view(-1, self.num_heads, self.dim_per_head)
