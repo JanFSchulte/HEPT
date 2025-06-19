@@ -53,12 +53,21 @@ def get_new_idx_split(dataset):
 
 class Tracking(InMemoryDataset):
     def __init__(self, root, dataset_name, debug=True, **kwargs):
-        assert dataset_name in ["tracking-6k", "tracking-60k"]
+        assert dataset_name in ["tracking-6k", "tracking-60k", "tracking-600"]
         self.url_processed_60k = "https://zenodo.org/records/10694703/files/tracking-60k-processed.zip"
         self.url_processed_6k = "https://zenodo.org/records/10694703/files/tracking-6k-processed.zip"
 
         self.dataset_name = dataset_name
-        self.n_sectors = 1 if dataset_name == "tracking-60k" else 10
+        self.dataset_name = dataset_name
+        if dataset_name == 'tracking-60k':
+            self.n_sectors = 1
+        if dataset_name == 'tracking-6k':
+            self.n_sectors = 10 
+        if dataset_name == 'tracking-1200':
+            self.n_sectors = 50
+        if dataset_name == 'tracking-600':
+            self.n_sectors = 100        
+
         self.debug = debug
 
         self.feature_names = (

@@ -125,10 +125,9 @@ class Transformer(nn.Module):
         if self.task == "pileup":
             pids_emb = self.pids_enc(x[..., -1].long())
             x = torch.cat((x[..., :-1], pids_emb), dim=-1)
-        print (data)
-        print (data['batch'])
-        x, mask, kwargs = prepare_input(x, coords, edge_index, batch, self.attn_type, self.helper_funcs)
 
+        x, mask, kwargs = prepare_input(x, coords, edge_index, batch, self.attn_type, self.helper_funcs)
+        
         encoded_x = self.feat_encoder(x)
         all_encoded_x = [encoded_x]
         for i in range(self.n_layers):
